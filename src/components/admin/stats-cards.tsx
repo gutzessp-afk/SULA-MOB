@@ -1,5 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { FolderKanban, Clock, Zap, CheckCircle2 } from "lucide-react";
+import { FolderKanban, Clock, Zap, CheckCircle2, TrendingUp, TrendingDown } from "lucide-react";
 import { mockProjects } from "@/lib/mock-data";
 
 function getStats() {
@@ -17,37 +16,37 @@ const cards = [
     label: "Proyectos activos",
     key: "activeProjects" as const,
     icon: FolderKanban,
-    trend: "+2 este mes",
+    trend: "+12% vs ayer",
     trendUp: true,
-    color: "text-blue-400",
-    glow: "rgba(96,165,250,0.08)",
+    iconBg: "bg-blue-400/15",
+    iconColor: "text-blue-400",
   },
   {
     label: "Actividades pendientes",
     key: "pending" as const,
     icon: Clock,
-    trend: "-3 vs ayer",
+    trend: "-3% vs ayer",
     trendUp: false,
-    color: "text-amber-400",
-    glow: "rgba(251,191,36,0.08)",
+    iconBg: "bg-amber-400/15",
+    iconColor: "text-amber-400",
   },
   {
     label: "En proceso",
     key: "inProgress" as const,
     icon: Zap,
-    trend: "+1 hoy",
+    trend: "+8% vs ayer",
     trendUp: true,
-    color: "text-[#E30613]",
-    glow: "rgba(227,6,19,0.08)",
+    iconBg: "bg-[#E30613]/12",
+    iconColor: "text-[#E30613]",
   },
   {
     label: "Terminadas hoy",
     key: "done" as const,
     icon: CheckCircle2,
-    trend: "+4 vs ayer",
+    trend: "+21% vs ayer",
     trendUp: true,
-    color: "text-emerald-400",
-    glow: "rgba(52,211,153,0.08)",
+    iconBg: "bg-emerald-400/15",
+    iconColor: "text-emerald-400",
   },
 ];
 
@@ -55,31 +54,31 @@ export function StatsCards() {
   const stats = getStats();
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {cards.map(({ label, key, icon: Icon, trend, trendUp, color, glow }) => (
-        <Card
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {cards.map(({ label, key, icon: Icon, trend, trendUp, iconBg, iconColor }) => (
+        <div
           key={key}
-          className="bg-white/[0.03] border-white/[0.08] hover:border-white/[0.14] transition-colors"
-          style={{ boxShadow: `inset 0 1px 0 rgba(255,255,255,0.04)` }}
+          className="bg-[#2e2e2e] border border-white/[0.08] rounded-xl p-6 hover:bg-[#353535] hover:border-white/[0.12] transition-all duration-200"
         >
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between mb-3">
-              <div
-                className="p-2 rounded-lg"
-                style={{ background: glow }}
-              >
-                <Icon size={16} className={color} />
-              </div>
-              <span
-                className={`text-[11px] font-medium ${trendUp ? "text-emerald-400" : "text-amber-400"}`}
-              >
-                {trend}
-              </span>
+          <div className="flex items-start justify-between mb-4">
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${iconBg}`}>
+              <Icon size={18} className={iconColor} />
             </div>
-            <p className="text-2xl font-bold text-white tabular-nums">{stats[key]}</p>
-            <p className="text-xs text-white/40 mt-1">{label}</p>
-          </CardContent>
-        </Card>
+            <div className={`flex items-center gap-1 text-[11px] font-medium ${trendUp ? "text-emerald-400" : "text-red-400"}`}>
+              {trendUp
+                ? <TrendingUp size={12} />
+                : <TrendingDown size={12} />}
+              {trend}
+            </div>
+          </div>
+
+          <p className="text-[11px] uppercase tracking-wider text-white/50 font-medium mb-1.5">
+            {label}
+          </p>
+          <p className="text-4xl font-bold text-white tabular-nums leading-none">
+            {stats[key]}
+          </p>
+        </div>
       ))}
     </div>
   );

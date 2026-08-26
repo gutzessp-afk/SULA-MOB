@@ -23,7 +23,6 @@ export function AuthPanel() {
     setError(null);
     setLoading(true);
 
-    // Pequeño delay para simular request
     await new Promise((r) => setTimeout(r, 600));
 
     const user = mockUsers.find(
@@ -49,19 +48,11 @@ export function AuthPanel() {
     }
 
     saveSession(user);
-    router.push(
-      user.role === "admin" ? "/admin/dashboard" : "/operator/dashboard"
-    );
+    router.push("/home");
   };
 
   return (
-    <section
-      className="min-h-[60vh] lg:min-h-screen flex items-center justify-center p-6 md:p-10 lg:p-16"
-      style={{
-        background:
-          "linear-gradient(135deg, #1a1a1a 0%, #141414 50%, #1a1a1a 100%)",
-      }}
-    >
+    <section className="min-h-[60vh] lg:min-h-screen flex items-center justify-center p-6 md:p-10 lg:p-16 bg-white">
       <div className="w-full max-w-md space-y-6">
         {/* Tabs Admin / Operador */}
         <Tabs
@@ -71,16 +62,16 @@ export function AuthPanel() {
             setError(null);
           }}
         >
-          <TabsList className="grid w-full grid-cols-2 bg-white/[0.05] p-1 rounded-lg border border-white/[0.08] h-11">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 rounded-lg h-11">
             <TabsTrigger
               value="admin"
-              className="data-[state=active]:bg-white data-[state=active]:text-black text-white/50 hover:text-white rounded-md transition-all font-medium"
+              className="!bg-transparent data-[state=active]:!bg-gray-900 !text-gray-500 data-[state=active]:!text-white hover:!text-gray-900 data-[state=active]:hover:!text-white rounded-md transition-all font-medium data-[state=active]:shadow-md"
             >
               Administrador
             </TabsTrigger>
             <TabsTrigger
               value="operator"
-              className="data-[state=active]:bg-white data-[state=active]:text-black text-white/50 hover:text-white rounded-md transition-all font-medium"
+              className="!bg-transparent data-[state=active]:!bg-gray-900 !text-gray-500 data-[state=active]:!text-white hover:!text-gray-900 data-[state=active]:hover:!text-white rounded-md transition-all font-medium data-[state=active]:shadow-md"
             >
               Operador
             </TabsTrigger>
@@ -89,10 +80,10 @@ export function AuthPanel() {
 
         {/* Título */}
         <div>
-          <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
             Bienvenido de nuevo
           </h2>
-          <p className="text-sm text-white/50 mt-2">
+          <p className="text-sm text-gray-500 mt-2">
             Ingresa tus credenciales para entrar al panel.
           </p>
         </div>
@@ -111,7 +102,7 @@ export function AuthPanel() {
           <div>
             <label
               htmlFor="username"
-              className="text-xs uppercase tracking-widest text-white/60 mb-2 block font-medium"
+              className="text-xs uppercase tracking-widest text-gray-600 mb-2 block font-semibold"
             >
               Usuario
             </label>
@@ -125,7 +116,7 @@ export function AuthPanel() {
               autoComplete="username"
               spellCheck={false}
               required
-              className="w-full h-12 px-4 rounded-lg bg-white text-black placeholder:text-black/40 border border-white/20 focus:outline-none focus:ring-2 focus:ring-[#E30613] focus:border-transparent transition-all duration-200 text-base"
+              className="w-full h-12 px-4 rounded-lg bg-gray-50 text-gray-900 placeholder:text-gray-400 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#E30613] focus:border-transparent focus:bg-white transition-all duration-200 text-base"
             />
           </div>
 
@@ -134,7 +125,7 @@ export function AuthPanel() {
             <div className="flex justify-between items-center mb-2">
               <label
                 htmlFor="password"
-                className="text-xs uppercase tracking-widest text-white/60 font-medium"
+                className="text-xs uppercase tracking-widest text-gray-600 font-semibold"
               >
                 Contraseña
               </label>
@@ -155,7 +146,7 @@ export function AuthPanel() {
                 placeholder="••••••••"
                 autoComplete="current-password"
                 required
-                className="w-full h-12 px-4 pr-12 rounded-lg bg-white text-black placeholder:text-black/40 border border-white/20 focus:outline-none focus:ring-2 focus:ring-[#E30613] focus:border-transparent transition-all duration-200 text-base"
+                className="w-full h-12 px-4 pr-12 rounded-lg bg-gray-50 text-gray-900 placeholder:text-gray-400 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#E30613] focus:border-transparent focus:bg-white transition-all duration-200 text-base"
               />
               <button
                 type="button"
@@ -163,7 +154,7 @@ export function AuthPanel() {
                 aria-label={
                   showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
                 }
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-black/50 hover:text-black transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-700 transition-colors"
               >
                 {showPassword ? (
                   <EyeOff className="w-4 h-4" />
@@ -189,13 +180,13 @@ export function AuthPanel() {
         </form>
 
         {/* Footer legal */}
-        <p className="text-xs text-white/40 text-center">
+        <p className="text-xs text-gray-500 text-center">
           Al continuar aceptas los{" "}
-          <a href="#" className="text-[#E30613] hover:underline">
+          <a href="#" className="text-[#E30613] hover:underline font-medium">
             Términos de servicio
           </a>{" "}
           y la{" "}
-          <a href="#" className="text-[#E30613] hover:underline">
+          <a href="#" className="text-[#E30613] hover:underline font-medium">
             Política de privacidad
           </a>
           .
