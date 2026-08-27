@@ -27,6 +27,15 @@ export interface Project {
   activities: Activity[];
 }
 
+export interface RecentActivity {
+  id: string;
+  user: string;
+  action: string;
+  project: string;
+  timestamp: string;
+  type: "info" | "success" | "warning" | "error";
+}
+
 // 7 áreas fijas de producción
 export const AREAS = [
   "Corte de Tubo",
@@ -109,3 +118,6 @@ export const mockProjects: Project[] = [
     activities: [],
   },
 ];
+
+// Feed vacío por ahora — se llenará con datos reales de Supabase
+export const recentActivityFeed: RecentActivity[] = [];

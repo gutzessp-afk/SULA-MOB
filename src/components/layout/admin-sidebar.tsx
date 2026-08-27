@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -10,8 +10,6 @@ import {
   BarChart3,
   Settings,
   LogOut,
-  Menu,
-  X,
 } from "lucide-react";
 import { getSession, clearSession } from "@/lib/auth";
 
@@ -26,7 +24,7 @@ const menuItems = [
 export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const user = getSession();
 
   const handleLogout = () => {
@@ -34,28 +32,50 @@ export function AdminSidebar() {
     router.push("/login");
   };
 
+  // Detectar hover en el borde izquierdo para abrir con mouse
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (e.clientX <= 20 && !isOpen) {
+        setIsOpen(true);
+      }
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [isOpen]);
+
   return (
     <>
-      {/* Botón toggle — siempre visible arriba a la izquierda */}
+      {/* Zona invisible del borde izquierdo (para mouse) */}
+      <div
+        className="fixed top-0 left-0 h-screen w-5 z-30"
+        onMouseEnter={() => setIsOpen(true)}
+      />
+
+      {/* Botón flotante para móvil (solo se ve en pantallas chicas) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 w-10 h-10 rounded-lg bg-[#2e2e2e] border border-white/[0.08] hover:bg-[#353535] flex items-center justify-center text-white transition-colors"
-        aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+        className="lg:hidden fixed top-4 left-4 z-50 w-11 h-11 rounded-full bg-[#E30613] hover:bg-[#c8050f] flex items-center justify-center text-white shadow-lg shadow-[#E30613]/30 transition-all"
+        aria-label="Abrir menú"
       >
-        {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        <div className="flex flex-col gap-1">
+          <span className="w-4 h-0.5 bg-white rounded" />
+          <span className="w-4 h-0.5 bg-white rounded" />
+          <span className="w-4 h-0.5 bg-white rounded" />
+        </div>
       </button>
 
-      {/* Overlay oscuro cuando está abierta */}
+      {/* Overlay para cerrar al hacer click fuera */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-30 backdrop-blur-sm"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen w-64 bg-[#2e2e2e] border-r border-white/[0.06] z-40 flex flex-col transition-transform duration-300 ${
+        onMouseLeave={() => setIsOpen(false)}
+        className={`fixed top-0 left-0 h-screen w-64 bg-[#2e2e2e] border-r border-white/[0.08] z-40 flex flex-col transition-transform duration-300 ease-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -84,6 +104,7 @@ export function AdminSidebar() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
+                    onClick={() => setIsOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       active
                         ? "bg-[#E30613]/15 text-[#E30613] border-l-2 border-[#E30613] pl-[10px]"

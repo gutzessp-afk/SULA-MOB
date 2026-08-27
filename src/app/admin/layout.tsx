@@ -34,8 +34,8 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-[#242424] text-white">
       <AdminSidebar />
-      <main className="lg:pl-64 min-h-screen transition-all duration-300">
-        <div className="p-6 md:p-8 lg:p-10 pt-20 lg:pt-10">{children}</div>
+      <main className="min-h-screen">
+        <div className="p-6 md:p-8 lg:p-10">{children}</div>
       </main>
     </div>
   );
