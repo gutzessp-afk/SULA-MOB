@@ -1,137 +1,128 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, FolderKanban, ListChecks, BarChart3, Settings, LogOut, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { clearSession, getSession } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
+import {
+  LayoutDashboard,
+  Package,
+  CheckSquare,
+  BarChart3,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+} from "lucide-react";
+import { getSession, clearSession } from "@/lib/auth";
 
-const navItems = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/proyectos", label: "Proyectos", icon: FolderKanban },
-  { href: "/admin/actividades", label: "Actividades", icon: ListChecks },
-  { href: "/admin/reportes", label: "Reportes", icon: BarChart3 },
-  { href: "/admin/configuracion", label: "Configuración", icon: Settings },
+const menuItems = [
+  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "Proyectos", href: "/admin/proyectos", icon: Package },
+  { label: "Actividades", href: "/admin/actividades", icon: CheckSquare },
+  { label: "Reportes", href: "/admin/reportes", icon: BarChart3 },
+  { label: "Configuración", href: "/admin/configuracion", icon: Settings },
 ];
 
-interface AdminSidebarProps {
-  open: boolean;
-  onClose: () => void;
-}
-
-export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
+export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(true);
   const user = getSession();
 
-  const initials = user?.name
-    .split(" ")
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase() ?? "A";
-
-  function handleLogout() {
+  const handleLogout = () => {
     clearSession();
     router.push("/login");
-  }
-
-  const sidebarContent = (
-    <div className="flex flex-col h-full bg-[#2e2e2e]">
-      {/* Logo */}
-      <div className="flex items-center justify-between px-5 py-5 border-b border-white/[0.06]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#E30613] flex items-center justify-center shrink-0">
-            <span className="font-bold text-white text-sm leading-none">S</span>
-          </div>
-          <span className="font-semibold text-white tracking-tight">SULA MOB</span>
-        </div>
-        <button
-          onClick={onClose}
-          className="md:hidden text-white/40 hover:text-white transition-colors"
-          aria-label="Cerrar menú"
-        >
-          <X size={18} />
-        </button>
-      </div>
-
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5" aria-label="Navegación principal">
-        <p className="px-3 mb-2 text-[10px] uppercase tracking-widest text-white/30 font-medium">
-          General
-        </p>
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onClose}
-              className={cn(
-                "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150",
-                active
-                  ? "bg-[#E30613]/12 text-white"
-                  : "text-white/50 hover:text-white hover:bg-white/[0.05]"
-              )}
-            >
-              {active && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 bg-[#E30613] rounded-r-full" />
-              )}
-              <Icon
-                size={18}
-                className={active ? "text-[#E30613]" : "text-white/40"}
-              />
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* User section */}
-      <div className="px-3 pb-4 border-t border-white/[0.06] pt-4">
-        <div className="flex items-center gap-3 px-3 mb-3">
-          <div className="w-8 h-8 rounded-full bg-[#E30613]/20 flex items-center justify-center shrink-0">
-            <span className="text-[11px] font-semibold text-[#E30613]">{initials}</span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-white truncate">{user?.name ?? "Admin"}</p>
-            <p className="text-[11px] text-white/40">Administrador</p>
-          </div>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleLogout}
-          className="w-full justify-start gap-2.5 text-white/40 hover:text-white hover:bg-white/[0.05] px-3 h-9"
-        >
-          <LogOut size={15} />
-          <span className="text-sm">Cerrar sesión</span>
-        </Button>
-      </div>
-    </div>
-  );
+  };
 
   return (
     <>
-      {/* Desktop */}
-      <aside className="hidden md:flex flex-col w-[240px] shrink-0 border-r border-white/[0.06]">
-        {sidebarContent}
-      </aside>
+      {/* Botón toggle — siempre visible arriba a la izquierda */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed top-4 left-4 z-50 w-10 h-10 rounded-lg bg-[#2e2e2e] border border-white/[0.08] hover:bg-[#353535] flex items-center justify-center text-white transition-colors"
+        aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+      >
+        {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
 
-      {/* Mobile overlay */}
-      {open && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={onClose}
-            aria-hidden="true"
-          />
-          <aside className="relative flex flex-col w-[240px] border-r border-white/[0.06] z-10">
-            {sidebarContent}
-          </aside>
-        </div>
+      {/* Overlay oscuro cuando está abierta */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
       )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed top-0 left-0 h-screen w-64 bg-[#2e2e2e] border-r border-white/[0.06] z-40 flex flex-col transition-transform duration-300 ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* Header con logo */}
+        <div className="p-6 border-b border-white/[0.06] flex flex-col items-center">
+          <img
+            src="/logo-sula-mob.png"
+            alt="SULA MOB"
+            className="h-16 w-auto mb-2"
+          />
+          <span className="text-sm font-semibold text-white/80 tracking-wider">
+            SULA MOB
+          </span>
+        </div>
+
+        {/* Menú */}
+        <nav className="flex-1 p-4 overflow-y-auto">
+          <div className="text-xs uppercase tracking-widest text-white/40 font-semibold mb-3 px-3">
+            General
+          </div>
+          <ul className="space-y-1">
+            {menuItems.map((item) => {
+              const active = pathname.startsWith(item.href);
+              const Icon = item.icon;
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      active
+                        ? "bg-[#E30613]/15 text-[#E30613] border-l-2 border-[#E30613] pl-[10px]"
+                        : "text-white/70 hover:bg-white/[0.05] hover:text-white"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    <span>{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Footer con usuario */}
+        <div className="border-t border-white/[0.06] p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-[#E30613] flex items-center justify-center text-white font-bold text-sm">
+              {user?.name?.charAt(0) || "A"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-white truncate">
+                {user?.name || "Administrador"}
+              </div>
+              <div className="text-xs text-white/50 capitalize">
+                {user?.role === "admin" ? "Administrador" : "Operador"}
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white/70 hover:bg-white/[0.05] hover:text-white transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Cerrar sesión</span>
+          </button>
+        </div>
+      </aside>
     </>
   );
 }
