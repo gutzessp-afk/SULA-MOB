@@ -5,7 +5,7 @@ import { mockProjects, type ProjectStatus } from "@/lib/mock-data";
 
 function statusStyle(status: ProjectStatus) {
   if (status === "Activo") return "bg-emerald-400/15 text-emerald-400 border-emerald-400/25";
-  if (status === "En pausa") return "bg-amber-400/15 text-amber-400 border-amber-400/25";
+  if (status === "Pausado") return "bg-amber-400/15 text-amber-400 border-amber-400/25"; // <-- CORREGIDO aquí
   return "bg-white/10 text-white/50 border-white/15";
 }
 
