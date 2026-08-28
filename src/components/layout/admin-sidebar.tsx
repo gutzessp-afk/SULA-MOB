@@ -9,15 +9,20 @@ import {
   CheckSquare,
   BarChart3,
   Settings,
+  Calendar,
+  Bell,
   LogOut,
 } from "lucide-react";
 import { getSession, clearSession } from "@/lib/auth";
+
 
 const menuItems = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Proyectos", href: "/admin/proyectos", icon: Package },
   { label: "Actividades", href: "/admin/actividades", icon: CheckSquare },
   { label: "Reportes", href: "/admin/reportes", icon: BarChart3 },
+  { label: "Calendario", href: "/admin/calendario", icon: Calendar },
+  { label: "Alertas", href: "/admin/alertas", icon: Bell },
   { label: "Configuración", href: "/admin/configuracion", icon: Settings },
 ];
 
