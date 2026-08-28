@@ -1,6 +1,9 @@
 import { BrandPanel } from "@/components/auth/brand-panel";
 import { AuthPanel } from "@/components/auth/auth-panel";
 
+// Forzar que la página sea dinámica para evitar errores de prerender en Vercel
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: "Acceso — SULA MOB",
 };
