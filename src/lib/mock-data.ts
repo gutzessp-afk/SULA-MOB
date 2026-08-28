@@ -1,15 +1,19 @@
 export type ActivityStatus = "Pendiente" | "En proceso" | "Terminado";
-export type ProjectStatus = "Activo" | "Completado" | "Pausado";
+export type ProjectStatus = "Activo" | "Completado" | "Pausado" | "En pausa";
 
 export interface Activity {
   id: string;
   projectId: string;
   area: string;
   status: ActivityStatus;
-  operator: string;
+  operator?: string;
+  order?: number;
+  description?: string;
   notes?: string;
   startedAt?: string;
   finishedAt?: string;
+  updatedAt?: string;
+  updatedBy?: string;
 }
 
 export interface Project {
@@ -24,6 +28,7 @@ export interface Project {
   progress: number;
   startDate: string;
   endDate?: string;
+  areaOrder?: string[];
   activities: Activity[];
 }
 
@@ -34,6 +39,12 @@ export interface RecentActivity {
   project: string;
   timestamp: string;
   type: "info" | "success" | "warning" | "error";
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  logo?: string;
 }
 
 // 7 áreas fijas de producción
@@ -47,21 +58,33 @@ export const AREAS = [
   "Empaque",
 ] as const;
 
-export type AreaName = (typeof AREAS)[number];
+export type Area = (typeof AREAS)[number];
+export type AreaName = Area;
 
-// Proyectos con imágenes placeholder de Unsplash (retail/mobiliario)
+// Clientes principales
+export const CLIENTS: Client[] = [
+  { id: "c001", name: "PepsiCo" },
+  { id: "c002", name: "KFC" },
+  { id: "c003", name: "Suburbia" },
+  { id: "c004", name: "Liverpool" },
+  { id: "c005", name: "Old Navy" },
+  { id: "c006", name: "Chedraui" },
+  { id: "c007", name: "Promoda" },
+];
+
+// Proyectos con imágenes placeholder
 export const mockProjects: Project[] = [
   {
     id: "p001",
     code: "P001",
     name: "Display Temporada Verano",
     client: "PepsiCo",
-    image:
-      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80",
+    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80",
     description: "Displays de temporada para tiendas de conveniencia",
     status: "Activo",
     progress: 65,
     startDate: "2026-07-15",
+    areaOrder: [...AREAS],
     activities: [],
   },
   {
@@ -69,12 +92,12 @@ export const mockProjects: Project[] = [
     code: "P002",
     name: "Módulo Caja KFC Monterrey",
     client: "KFC",
-    image:
-      "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=800&q=80",
+    image: "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=800&q=80",
     description: "Módulos de caja para expansión Monterrey",
     status: "Activo",
     progress: 40,
     startDate: "2026-08-01",
+    areaOrder: [...AREAS],
     activities: [],
   },
   {
@@ -82,13 +105,13 @@ export const mockProjects: Project[] = [
     code: "P003",
     name: "Rack Ropa Temporada",
     client: "Suburbia",
-    image:
-      "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=800&q=80",
+    image: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=800&q=80",
     description: "Racks metálicos para exhibición de ropa",
     status: "Completado",
     progress: 100,
     startDate: "2026-06-01",
     endDate: "2026-08-20",
+    areaOrder: [...AREAS],
     activities: [],
   },
   {
@@ -96,12 +119,12 @@ export const mockProjects: Project[] = [
     code: "P004",
     name: "Isla Bolsos Premium",
     client: "Liverpool",
-    image:
-      "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&q=80",
+    image: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&q=80",
     description: "Islas premium para departamento de bolsos",
     status: "Activo",
     progress: 15,
     startDate: "2026-08-10",
+    areaOrder: [...AREAS],
     activities: [],
   },
   {
@@ -109,15 +132,15 @@ export const mockProjects: Project[] = [
     code: "P005",
     name: "Exhibidor Snacks Ruta",
     client: "PepsiCo",
-    image:
-      "https://images.unsplash.com/photo-1601599963565-b7f49deb1c47?w=800&q=80",
+    image: "https://images.unsplash.com/photo-1601599963565-b7f49deb1c47?w=800&q=80",
     description: "Exhibidores móviles para ruta comercial",
     status: "Activo",
     progress: 8,
     startDate: "2026-08-18",
+    areaOrder: [...AREAS],
     activities: [],
   },
 ];
 
-// Feed vacío por ahora — se llenará con datos reales de Supabase
+// Feed vacío — se llenará con datos reales
 export const recentActivityFeed: RecentActivity[] = [];

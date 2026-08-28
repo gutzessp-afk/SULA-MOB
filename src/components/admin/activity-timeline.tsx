@@ -45,7 +45,7 @@ function TimelineItem({ item, isLast }: { item: RecentActivity; isLast: boolean 
             <span className="text-white/50">{item.action}</span>
           </p>
           <p className="text-xs text-white/40 mt-0.5 truncate">{item.project}</p>
-          <p className="text-[11px] text-white/25 mt-1">{item.time}</p>
+          <p className="text-[11px] text-white/25 mt-1">{item.timestamp}</p>
         </div>
       </div>
     </li>
