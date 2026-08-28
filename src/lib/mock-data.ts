@@ -1,5 +1,5 @@
 export type ActivityStatus = "Pendiente" | "En proceso" | "Terminado";
-export type ProjectStatus = "Activo" | "Completado" | "Pausado" | "En pausa";
+export type ProjectStatus = "Activo" | "Completado" | "Pausado";
 
 export interface Activity {
   id: string;
@@ -18,7 +18,7 @@ export interface Activity {
 
 export interface Project {
   id: string;
-  code: string;
+  code?: string; // <-- CORREGIDO: Ahora es opcional (?) para evitar el error TS2741
   name: string;
   client: string;
   clientLogo?: string;

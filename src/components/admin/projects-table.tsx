@@ -22,7 +22,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 function statusColor(status: ProjectStatus) {
   if (status === "Activo") return "bg-emerald-500/15 text-emerald-400 border-emerald-500/25";
-  if (status === "En pausa") return "bg-amber-500/15 text-amber-400 border-amber-500/25";
+  if (status === "Pausado") return "bg-amber-500/15 text-amber-400 border-amber-500/25";
   return "bg-white/10 text-white/50 border-white/15";
 }
 
@@ -81,7 +81,7 @@ function ProjectDetail({ project, onClose }: ProjectDetailProps) {
           <div>
             <p className="text-white/40 text-xs mb-2">Orden de áreas</p>
             <div className="flex flex-wrap gap-2">
-              {project.areaOrder.map((area, i) => (
+              {(project.areaOrder ?? []).map((area, i) => (
                 <div key={area} className="flex items-center gap-1.5 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white/70">
                   <span className="text-[#E30613] font-semibold">{i + 1}</span>
                   {area}
@@ -147,7 +147,6 @@ export function ProjectsTable() {
       startDate: new Date().toISOString().split("T")[0],
       status: "Activo",
       progress: 0,
-      areas: form.areas,
       areaOrder: form.areas,
       activities: form.areas.map((area, i) => ({
         id: `${generateId()}-${i}`,
@@ -289,14 +288,14 @@ export function ProjectsTable() {
               <Label htmlFor="proj-client" className="text-xs text-white/50 tracking-widest uppercase">
                 Cliente
               </Label>
-              <Select value={form.client} onValueChange={(v) => setForm((f) => ({ ...f, client: v }))}>
+              <Select value={form.client ?? undefined} onValueChange={(v) => setForm((f) => ({ ...f, client: v }))}>
                 <SelectTrigger id="proj-client" className="bg-white/[0.05] border-white/[0.12] text-white focus:ring-[#E30613]">
                   <SelectValue placeholder="Seleccionar cliente..." />
                 </SelectTrigger>
                 <SelectContent className="bg-[#1a1a1a] border-white/[0.10] text-white">
                   {CLIENTS.map((c) => (
-                    <SelectItem key={c} value={c} className="focus:bg-white/[0.08] focus:text-white">
-                      {c}
+                    <SelectItem key={c.id} value={c.name} className="focus:bg-white/[0.08] focus:text-white">
+                      {c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
