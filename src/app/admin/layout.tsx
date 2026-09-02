@@ -32,12 +32,10 @@ export default function AdminLayout({
   if (loading || !user) return null;
 
   return (
-    <div className="min-h-screen bg-[#242424] text-white">
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
       <AdminSidebar />
-      <main className="min-h-screen">
-        <div className="max-w-7xl mx-auto p-6 md:p-8 lg:p-10">
-          {children}
-        </div>
+      <main className="min-h-screen w-full">
+        {children}
       </main>
     </div>
   );
