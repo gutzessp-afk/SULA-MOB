@@ -1,533 +1,486 @@
 "use client";
 
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import {
   Search,
-  Bell,
-  Download,
-  Calendar,
-  ChevronDown,
-  ChevronRight,
-  ArrowUpRight,
-  ArrowDownRight,
-  Circle,
-  Layers,
-  Activity,
-  CheckCircle2,
-  ClipboardCheck,
-  AlertTriangle,
+  Folder,
+  LayoutDashboard,
+  CheckSquare,
   Users,
+  ArrowRight,
+  Plus,
+  Clock,
+  TrendingUp,
+  AlertTriangle,
   Package,
-  Target,
+  Bell,
+  CalendarDays,
+  Inbox,
 } from "lucide-react";
+
+/* ---------------------------------------------------------------- */
+/* Notificaciones                                                    */
+/* ---------------------------------------------------------------- */
+
+type Notificacion = {
+  id: number;
+  codigo: string;
+  proyecto: string;
+  cliente: string;
+  inicio: string;
+  fin: string;
+  tono: "red" | "amber" | "blue";
+  leida?: boolean;
+};
+
+const notificaciones: Notificacion[] = [];
+
+function fmtFecha(iso: string) {
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "2-digit",
+    month: "short",
+  }).format(new Date(`${iso}T12:00:00`));
+}
+
+function diasRestantes(iso: string) {
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  return Math.round(
+    (new Date(`${iso}T12:00:00`).getTime() - hoy.getTime()) / 86_400_000
+  );
+}
+
+function NotificacionesBell() {
+  const [abierto, setAbierto] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const sinLeer = notificaciones.filter((n) => !n.leida).length;
+
+  const barra: Record<Notificacion["tono"], string> = {
+    red: "bg-red-500",
+    amber: "bg-amber-500",
+    blue: "bg-blue-500",
+  };
+
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setAbierto(false);
+      }
+    }
+    function onEsc(e: KeyboardEvent) {
+      if (e.key === "Escape") setAbierto(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, []);
+
+  return (
+    <div className="relative flex-shrink-0" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setAbierto((v) => !v)}
+        aria-label="Notificaciones"
+        aria-expanded={abierto}
+        className="relative grid place-items-center w-[42px] h-[42px] bg-[#1c1c1c] border border-white/[0.1] rounded-xl text-white/50 hover:text-white hover:border-white/[0.2] focus:outline-none focus:ring-1 focus:ring-red-500/50 transition-colors"
+      >
+        <Bell className="w-4 h-4" />
+        {sinLeer > 0 && (
+          <span className="absolute -top-1 -right-1 grid place-items-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-[10px] font-bold text-white ring-2 ring-[#141414]">
+            {sinLeer}
+          </span>
+        )}
+      </button>
+
+      {abierto && (
+        <div className="absolute right-0 mt-2 w-[340px] z-50 bg-[#1c1c1c] border border-white/[0.1] rounded-2xl shadow-2xl shadow-black/60 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+            <h3 className="text-xs font-bold uppercase tracking-wider">
+              Notificaciones
+            </h3>
+            <span className="text-[10px] text-white/40 font-medium">
+              {sinLeer} sin leer
+            </span>
+          </div>
+
+          {notificaciones.length === 0 ? (
+            <div className="px-6 py-10 text-center">
+              <Inbox className="w-7 h-7 mx-auto text-white/15 mb-3" />
+              <p className="text-xs font-semibold text-white/50">
+                Sin notificaciones
+              </p>
+              <p className="text-[11px] text-white/30 mt-1">
+                Las alertas de entrega aparecerán aquí
+              </p>
+            </div>
+          ) : (
+            <div className="max-h-[360px] overflow-y-auto divide-y divide-white/[0.04]">
+              {notificaciones.map((n) => {
+                const dias = diasRestantes(n.fin);
+                return (
+                  <button
+                    key={n.id}
+                    type="button"
+                    className="w-full flex gap-3 px-4 py-3.5 text-left hover:bg-white/[0.03] transition-colors"
+                  >
+                    <div
+                      className={`w-1 rounded-full flex-shrink-0 ${barra[n.tono]}`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="text-xs font-bold truncate">
+                          {n.codigo} · {n.proyecto}
+                        </span>
+                        <span
+                          className={`text-[11px] font-bold whitespace-nowrap ${
+                            dias < 0
+                              ? "text-red-400"
+                              : dias <= 3
+                                ? "text-amber-400"
+                                : "text-white/40"
+                          }`}
+                        >
+                          {dias < 0 ? `${Math.abs(dias)}d tarde` : `${dias}d`}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-white/40 mt-0.5">
+                        {n.cliente}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-2 text-[11px] text-white/50 font-medium">
+                        <CalendarDays className="w-3 h-3 text-white/25" />
+                        {fmtFecha(n.inicio)}{" "}
+                        <span className="text-white/25">→</span>{" "}
+                        {fmtFecha(n.fin)}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <Link
+            href="/admin/alertas"
+            className="flex items-center justify-center gap-1.5 w-full py-3 text-xs font-semibold text-white/50 hover:text-white bg-white/[0.02] hover:bg-white/[0.05] border-t border-white/[0.06] transition-colors"
+          >
+            Ver todas <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* Estado vacío reutilizable                                         */
+/* ---------------------------------------------------------------- */
+
+function Vacio({
+  titulo,
+  detalle,
+  icono: Icono,
+}: {
+  titulo: string;
+  detalle: string;
+  icono: React.ElementType;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-12 px-4">
+      <Icono className="w-7 h-7 text-white/15 mb-3" />
+      <p className="text-xs font-semibold text-white/50">{titulo}</p>
+      <p className="text-[11px] text-white/30 mt-1 max-w-[220px]">{detalle}</p>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* Dashboard                                                         */
+/* ---------------------------------------------------------------- */
+
+type Actividad = {
+  id: number;
+  titulo: string;
+  codigo: string;
+  area: string;
+  resp: string;
+  estado: string;
+  tono: string;
+  tiempo: string;
+};
+
+type Entrega = {
+  proy: string;
+  cliente: string;
+  dias: number;
+  tono: string;
+};
+
+type Area = {
+  area: string;
+  tareas: number;
+  estado: string;
+  dot: string;
+};
 
 export default function DashboardPage() {
   const today = new Date().toLocaleDateString("es-MX", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
     year: "numeric",
   });
+  const fecha = today.charAt(0).toUpperCase() + today.slice(1);
 
-  const now = new Date().toLocaleTimeString("es-MX", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  // ---------------------------------------------------------------------
-  // Datos mock
-  // ---------------------------------------------------------------------
   const kpis = [
-    { label: "PROYECTOS", value: "12", delta: "+2", trend: "up", tone: "neutral", icon: Layers },
-    { label: "ACTIVOS", value: "4", delta: "0", trend: "flat", tone: "blue", icon: Activity },
-    { label: "COMPLETADOS", value: "8", delta: "+3", trend: "up", tone: "green", icon: CheckCircle2 },
-    { label: "POR VERIFICAR", value: "14", delta: "+5", trend: "up", tone: "amber", icon: ClipboardCheck },
-    { label: "CON RETRASO", value: "2", delta: "+1", trend: "up", tone: "red", icon: AlertTriangle },
-    { label: "OPERADORES", value: "7/7", delta: "100%", trend: "flat", tone: "green", icon: Users },
-    { label: "PIEZAS HOY", value: "1,247", delta: "+18%", trend: "up", tone: "neutral", icon: Package },
-    { label: "CUMPLIMIENTO", value: "94%", delta: "+2%", trend: "up", tone: "green", icon: Target },
+    { title: "Proyectos activos", value: "0", subtitle: "En producción", delta: "", icon: <Folder className="w-4 h-4" />, color: "red", href: "/admin/proyectos" },
+    { title: "Actividades activas", value: "0", subtitle: "En proceso", delta: "", icon: <LayoutDashboard className="w-4 h-4" />, color: "blue", href: "/admin/actividades" },
+    { title: "Requieren atención", value: "0", subtitle: "Pendientes", delta: "", icon: <CheckSquare className="w-4 h-4" />, color: "amber", href: "/admin/actividades" },
+    { title: "Operadores activos", value: "0/0", subtitle: "Disponibles", delta: "", icon: <Users className="w-4 h-4" />, color: "emerald" },
   ];
 
-  const proyectos = [
-    { codigo: "P-001", nombre: "Display Verano", cliente: "PepsiCo", prio: "A", prog: 65, estado: "ACT", entrega: "15 SEP", resp: "GR", cambio: "+5%" },
-    { codigo: "P-002", nombre: "Caja KFC MTY", cliente: "KFC", prio: "M", prog: 40, estado: "ACT", entrega: "22 SEP", resp: "OG", cambio: "+2%" },
-    { codigo: "P-003", nombre: "Rack Ropa Temp", cliente: "Suburbia", prio: "B", prog: 100, estado: "OK", entrega: "20 AGO", resp: "GR", cambio: "0%" },
-    { codigo: "P-004", nombre: "Isla Bolsos Prem", cliente: "Liverpool", prio: "A", prog: 15, estado: "ACT", entrega: "30 SEP", resp: "OG", cambio: "+3%" },
-    { codigo: "P-005", nombre: "Exhib Snacks", cliente: "PepsiCo", prio: "M", prog: 8, estado: "ACT", entrega: "05 OCT", resp: "GR", cambio: "+1%" },
-    { codigo: "P-006", nombre: "Góndola Hardline", cliente: "Chedraui", prio: "A", prog: 72, estado: "DELAY", entrega: "10 SEP", resp: "OG", cambio: "-4%" },
-    { codigo: "P-007", nombre: "Vitrina Corner", cliente: "Suburbia", prio: "B", prog: 45, estado: "ACT", entrega: "18 OCT", resp: "GR", cambio: "+7%" },
-    { codigo: "P-008", nombre: "Portagráficos ON", cliente: "Old Navy", prio: "M", prog: 88, estado: "ACT", entrega: "12 SEP", resp: "OG", cambio: "+2%" },
-  ];
+  const actividades: Actividad[] = [];
+  const entregas: Entrega[] = [];
+  const areas: Area[] = [];
 
-  const areas = [
-    { nombre: "Corte tubo", ok: 5, proc: 3, pend: 2, util: 83 },
-    { nombre: "Doblez", ok: 4, proc: 2, pend: 4, util: 60 },
-    { nombre: "Corte lámina", ok: 6, proc: 1, pend: 1, util: 92 },
-    { nombre: "Soldadura", ok: 3, proc: 4, pend: 3, util: 70 },
-    { nombre: "Alambrón", ok: 7, proc: 0, pend: 1, util: 95 },
-    { nombre: "Pintura", ok: 2, proc: 3, pend: 5, util: 45 },
-    { nombre: "Empaque", ok: 8, proc: 1, pend: 0, util: 98 },
-  ];
+  const cumplimiento: number | null = null;
+  const piezasHoy = 0;
+  const enRiesgo = 0;
 
-  const entregas = [
-    { proy: "P-006", cliente: "Chedraui", dias: -2, alert: "CRIT" },
-    { proy: "P-008", cliente: "Old Navy", dias: 3, alert: "HIGH" },
-    { proy: "P-001", cliente: "PepsiCo", dias: 7, alert: "MED" },
-    { proy: "P-002", cliente: "KFC", dias: 14, alert: "LOW" },
-    { proy: "P-007", cliente: "Suburbia", dias: 21, alert: "LOW" },
-  ];
-
-  const operadores = [
-    { rank: 1, nombre: "Juan M.", area: "Soldadura", pzs: 342, ef: 98 },
-    { rank: 2, nombre: "Erik A.", area: "Corte tubo", pzs: 298, ef: 95 },
-    { rank: 3, nombre: "Luis P.", area: "Empaque", pzs: 285, ef: 93 },
-    { rank: 4, nombre: "María G.", area: "Pintura", pzs: 231, ef: 91 },
-    { rank: 5, nombre: "Carlos R.", area: "Doblez", pzs: 218, ef: 88 },
-  ];
-
-  const alertas = [
-    { tipo: "CRIT", msg: "P-006 con 2 días de retraso", t: "15m" },
-    { tipo: "HIGH", msg: "Stock bajo de lámina calibre 14", t: "1h" },
-    { tipo: "MED", msg: "5 actividades esperan verificación", t: "2h" },
-    { tipo: "INFO", msg: "Nuevo proyecto asignado a Corte Tubo", t: "3h" },
-    { tipo: "INFO", msg: "Reporte semanal disponible", t: "5h" },
-  ];
-
-  // ---------------------------------------------------------------------
-  // Helpers de tono
-  // ---------------------------------------------------------------------
-  const toneText: Record<string, string> = {
-    neutral: "text-[#F4F5F7]",
-    blue: "text-[#5B9BFF]",
-    green: "text-[#2DD4A7]",
-    amber: "text-[#F2B705]",
-    red: "text-[#FF5A6E]",
+  const estadoTono: Record<string, string> = {
+    blue: "bg-blue-500/15 text-blue-400 border border-blue-500/25",
+    amber: "bg-amber-500/15 text-amber-400 border border-amber-500/25",
+    emerald: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25",
   };
-  const toneBg: Record<string, string> = {
-    neutral: "bg-white/[0.06]",
-    blue: "bg-[#5B9BFF]/[0.12]",
-    green: "bg-[#2DD4A7]/[0.12]",
-    amber: "bg-[#F2B705]/[0.12]",
-    red: "bg-[#FF5A6E]/[0.12]",
-  };
-  const prioStyle: Record<string, string> = {
-    A: "bg-[#FF5A6E]/[0.14] text-[#FF5A6E] border-[#FF5A6E]/30",
-    M: "bg-[#F2B705]/[0.14] text-[#F2B705] border-[#F2B705]/30",
-    B: "bg-[#5B9BFF]/[0.14] text-[#5B9BFF] border-[#5B9BFF]/30",
-  };
-  const estadoStyle: Record<string, string> = {
-    ACT: "bg-[#5B9BFF]/[0.14] text-[#5B9BFF]",
-    OK: "bg-[#2DD4A7]/[0.14] text-[#2DD4A7]",
-    DELAY: "bg-[#FF5A6E]/[0.16] text-[#FF5A6E]",
-  };
-  const alertDot: Record<string, string> = {
-    CRIT: "bg-[#FF5A6E]",
-    HIGH: "bg-[#F2B705]",
-    MED: "bg-[#5B9BFF]",
-    LOW: "bg-white/25",
-    INFO: "bg-white/25",
-  };
-
-  const card =
-    "rounded-2xl border border-[#2A2D33] bg-[#17191D] shadow-[0_1px_0_0_rgba(255,255,255,0.03)_inset,0_12px_28px_-14px_rgba(0,0,0,0.65)] overflow-hidden";
-
-  const hazardStripe = {
-    backgroundImage:
-      "repeating-linear-gradient(135deg, #E30613 0px, #E30613 14px, #17191D 14px, #17191D 28px)",
+  const dotTono: Record<string, string> = {
+    blue: "bg-blue-500",
+    amber: "bg-amber-500",
+    emerald: "bg-emerald-500",
   };
 
   return (
-    <div
-      className="min-h-screen bg-[#0E0F11] text-[#F4F5F7]"
-      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
-    >
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-        .font-display { font-family: 'Oswald', sans-serif; }
-        .font-data { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
-      `}</style>
-
-      {/* franja de seguridad — elemento de firma, único en la página junto con las alertas críticas */}
-      <div className="h-[5px] w-full" style={hazardStripe} />
-
-      {/* HEADER --------------------------------------------------------- */}
-      <header className="sticky top-0 z-30 border-b border-[#2A2D33] bg-[#0E0F11]/95 backdrop-blur">
-        <div className="mx-auto max-w-[1600px] px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex items-center gap-1.5 rounded-full border border-[#2DD4A7]/30 bg-[#2DD4A7]/10 px-2.5 py-1">
-                <Circle className="h-1.5 w-1.5 animate-pulse fill-[#2DD4A7] text-[#2DD4A7]" />
-                <span className="font-display text-[10px] font-semibold tracking-[0.15em] text-[#2DD4A7]">
-                  EN VIVO
-                </span>
-              </div>
-              <div className="hidden min-w-0 flex-col leading-tight sm:flex">
-                <span className="font-display text-sm font-semibold tracking-wide text-[#F4F5F7]">
-                  PISO DE PRODUCCIÓN
-                </span>
-                <span className="font-data text-[11px] text-[#62666F]">
-                  {today.toUpperCase()} · {now}
-                </span>
-              </div>
-            </div>
-
-            <div className="hidden max-w-md flex-1 md:block">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#62666F]" />
-                <input
-                  type="text"
-                  placeholder="Buscar proyecto, cliente, área…"
-                  className="h-9 w-full rounded-lg border border-[#2A2D33] bg-[#17191D] pl-9 pr-3 text-sm text-[#F4F5F7] placeholder:text-[#62666F] outline-none transition-colors focus:border-[#E30613]/60"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button className="hidden h-9 items-center gap-1.5 rounded-lg border border-[#2A2D33] bg-[#17191D] px-3 text-xs font-medium text-[#9AA0AB] transition-colors hover:border-[#383B42] hover:text-[#F4F5F7] md:flex">
-                <Calendar className="h-3.5 w-3.5" />
-                Últimos 7 días
-                <ChevronDown className="h-3 w-3" />
-              </button>
-              <button className="hidden h-9 items-center gap-1.5 rounded-lg border border-[#2A2D33] bg-[#17191D] px-3 text-xs font-medium text-[#9AA0AB] transition-colors hover:border-[#383B42] hover:text-[#F4F5F7] md:flex">
-                <Download className="h-3.5 w-3.5" />
-                Exportar
-              </button>
-              <button className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-[#2A2D33] bg-[#17191D] text-[#9AA0AB] transition-colors hover:border-[#383B42] hover:text-[#F4F5F7]">
-                <Bell className="h-4 w-4" />
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#E30613] text-[9px] font-bold text-white">
-                  3
-                </span>
-              </button>
-              <div className="flex items-center gap-2 border-l border-[#2A2D33] pl-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#E30613] font-display text-sm font-bold text-white">
-                  G
-                </div>
-                <div className="hidden leading-tight xl:block">
-                  <div className="text-xs font-semibold text-[#F4F5F7]">Ing. Gibrán</div>
-                  <div className="font-data text-[10px] text-[#62666F]">Administrador</div>
-                </div>
-              </div>
-            </div>
+    <div className="w-full min-h-screen text-white">
+      {/* Cabecera */}
+      <header className="px-4 sm:px-6 lg:px-8 pt-6 lg:pt-8 pb-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/[0.06]">
+        <div>
+          <div className="text-[11px] uppercase tracking-wider text-red-500 font-bold mb-1.5 flex items-center gap-2">
+            <span>SULA MOB</span>
+            <span className="text-white/20">/</span>
+            <span className="text-white/50">Control operativo</span>
           </div>
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Panel de administración</h1>
+          <p className="text-xs text-white/40 mt-1">{fecha}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 lg:w-72">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+            <input
+              type="text"
+              placeholder="Buscar proyecto, cliente..."
+              className="w-full pl-10 pr-4 py-2.5 bg-[#1c1c1c] border border-white/[0.1] rounded-xl text-xs outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all placeholder:text-white/30"
+            />
+          </div>
+          <NotificacionesBell />
+          <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2 text-xs font-semibold whitespace-nowrap shadow-lg shadow-red-600/20">
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Nuevo proyecto</span>
+          </button>
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1600px] space-y-4 px-4 py-5 sm:px-6 lg:px-8">
-        {/* KPIs -------------------------------------------------------- */}
-        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-8">
-          {kpis.map((k, i) => {
-            const Icon = k.icon;
-            return (
-              <div key={i} className={`${card} p-4`}>
-                <div className={`mb-3 flex h-8 w-8 items-center justify-center rounded-lg ${toneBg[k.tone]}`}>
-                  <Icon className={`h-4 w-4 ${toneText[k.tone]}`} />
+      <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-[1600px] mx-auto w-full">
+        {/* KPIs */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {kpis.map((kpi, i) => {
+            const colors: Record<string, string> = {
+              red: "text-red-500 bg-red-500/10 border-red-500/20",
+              blue: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+              amber: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+              emerald: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+            };
+            const card = (
+              <div className="relative bg-gradient-to-br from-[#1e1e1e] to-[#161616] rounded-2xl p-5 border border-white/[0.08] flex flex-col justify-between h-36 overflow-hidden group hover:border-white/[0.18] hover:shadow-xl hover:shadow-black/40 transition-all duration-300">
+                <div className="flex justify-between items-start">
+                  <h3 className="text-[11px] font-medium text-white/40 tracking-wide uppercase">{kpi.title}</h3>
+                  <div className={`p-2 rounded-xl border ${colors[kpi.color]}`}>{kpi.icon}</div>
                 </div>
-                <div className="font-display text-[11px] font-medium uppercase tracking-[0.1em] text-[#62666F]">
-                  {k.label}
-                </div>
-                <div className="mt-1 font-display text-2xl font-semibold tabular-nums tracking-tight text-[#F4F5F7]">
-                  {k.value}
-                </div>
-                <div
-                  className={`mt-1.5 flex items-center gap-0.5 font-data text-[11px] font-medium ${
-                    k.trend === "flat" ? "text-[#62666F]" : toneText[k.tone === "neutral" ? "green" : k.tone]
-                  }`}
-                >
-                  {k.trend === "up" && <ArrowUpRight className="h-3 w-3" />}
-                  {k.trend === "down" && <ArrowDownRight className="h-3 w-3" />}
-                  {k.delta}
+                <div>
+                  <div className="text-4xl font-black tracking-tight leading-none mb-1.5 text-white/25">{kpi.value}</div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-white/40">{kpi.subtitle}</p>
+                    {kpi.delta && <span className="text-[10px] font-semibold text-emerald-400">{kpi.delta}</span>}
+                  </div>
                 </div>
               </div>
             );
+            return kpi.href ? <Link key={i} href={kpi.href}>{card}</Link> : <div key={i}>{card}</div>;
           })}
-        </section>
+        </div>
 
-        {/* GRID PRINCIPAL ------------------------------------------------ */}
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          {/* COLUMNA IZQUIERDA */}
-          <div className="space-y-4 lg:col-span-2">
-            {/* PROYECTOS ACTIVOS */}
-            <div className={card}>
-              <div className="flex items-center justify-between border-b border-[#2A2D33] px-4 py-3.5 sm:px-5">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-4 w-1 rounded-full bg-[#E30613]" />
-                  <h3 className="font-display text-sm font-semibold tracking-wide text-[#F4F5F7]">
-                    Proyectos activos
-                  </h3>
-                  <span className="font-data text-xs text-[#62666F]">({proyectos.length})</span>
+        {/* Banda de resumen: Cumplimiento + Piezas + En riesgo */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Cumplimiento */}
+          <div className="bg-[#1c1c1c] border border-white/[0.08] rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-4 h-4 text-white/25" />
+                <span className="text-[11px] uppercase tracking-wider text-white/50 font-semibold">Cumplimiento</span>
+              </div>
+              {cumplimiento === null ? (
+                <>
+                  <div className="text-4xl font-black text-white/20">—</div>
+                  <p className="text-[10px] text-white/30 font-medium mt-1">Sin datos del periodo</p>
+                </>
+              ) : (
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-black">{cumplimiento}</span>
+                  <span className="text-xl font-bold text-white/50">%</span>
                 </div>
-                <button className="flex items-center gap-1 font-display text-xs font-semibold tracking-wide text-[#E30613] hover:text-[#ff2f3e]">
-                  Ver todos <ChevronRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
+              )}
+            </div>
+          </div>
 
-              {/* Vista tabla — sm y superior */}
-              <div className="hidden overflow-x-auto sm:block">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-[#2A2D33] text-left font-display text-[11px] uppercase tracking-wider text-[#62666F]">
-                      <th className="px-5 py-2.5 font-medium">Código</th>
-                      <th className="px-3 py-2.5 font-medium">Proyecto</th>
-                      <th className="hidden px-3 py-2.5 font-medium md:table-cell">Cliente</th>
-                      <th className="px-3 py-2.5 text-center font-medium">Prio</th>
-                      <th className="px-3 py-2.5 font-medium">Progreso</th>
-                      <th className="px-3 py-2.5 font-medium">Estado</th>
-                      <th className="hidden px-3 py-2.5 font-medium lg:table-cell">Entrega</th>
-                      <th className="hidden px-5 py-2.5 text-center font-medium md:table-cell">Resp</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {proyectos.map((p, i) => (
-                      <tr
-                        key={i}
-                        className="border-b border-[#2A2D33]/70 transition-colors last:border-0 hover:bg-white/[0.02]"
-                      >
-                        <td className="px-5 py-3 font-data text-xs font-medium text-[#9AA0AB]">{p.codigo}</td>
-                        <td className="whitespace-nowrap px-3 py-3 font-medium text-[#F4F5F7]">{p.nombre}</td>
-                        <td className="hidden px-3 py-3 text-[#9AA0AB] md:table-cell">{p.cliente}</td>
-                        <td className="px-3 py-3 text-center">
-                          <span
-                            className={`inline-flex h-6 w-6 items-center justify-center rounded-md border font-data text-[11px] font-semibold ${prioStyle[p.prio]}`}
-                          >
-                            {p.prio}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3">
-                          <div className="flex min-w-[110px] items-center gap-2.5">
-                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
-                              <div
-                                className={`h-full rounded-full ${
-                                  p.prog >= 70 ? "bg-[#2DD4A7]" : p.prog >= 30 ? "bg-[#F2B705]" : "bg-[#FF5A6E]"
-                                }`}
-                                style={{ width: `${p.prog}%` }}
-                              />
-                            </div>
-                            <span className="w-9 text-right font-data text-xs font-medium text-[#9AA0AB]">
-                              {p.prog}%
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-3">
-                          <span
-                            className={`inline-flex items-center rounded-md px-2 py-0.5 font-display text-[10px] font-semibold uppercase tracking-wider ${estadoStyle[p.estado]}`}
-                          >
-                            {p.estado === "ACT" ? "Activo" : p.estado === "OK" ? "Completado" : "Retraso"}
-                          </span>
-                        </td>
-                        <td className="hidden px-3 py-3 font-data text-xs text-[#9AA0AB] lg:table-cell">
-                          {p.entrega}
-                        </td>
-                        <td className="hidden px-5 py-3 text-center md:table-cell">
-                          <div className="mx-auto flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06] font-data text-[10px] font-semibold text-[#9AA0AB]">
-                            {p.resp}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {/* Piezas hoy */}
+          <div className="bg-[#1c1c1c] border border-white/[0.08] rounded-2xl p-5 flex items-center justify-between hover:border-white/[0.15] transition-colors">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Package className="w-4 h-4 text-white/25" />
+                <span className="text-[11px] uppercase tracking-wider text-white/50 font-semibold">Piezas hoy</span>
               </div>
+              <div className="text-4xl font-black text-white/25">{piezasHoy.toLocaleString("es-MX")}</div>
+              <p className="text-[10px] text-white/30 font-medium mt-1">Sin registros hoy</p>
+            </div>
+          </div>
 
-              {/* Vista tarjetas — solo móvil */}
-              <div className="divide-y divide-[#2A2D33]/70 sm:hidden">
-                {proyectos.map((p, i) => (
-                  <div key={i} className="px-4 py-3.5">
-                    <div className="flex items-start justify-between gap-2">
+          {/* Proyectos en riesgo */}
+          <Link href="/admin/alertas" className="bg-[#1c1c1c] border border-white/[0.08] rounded-2xl p-5 flex items-center justify-between hover:border-white/[0.15] transition-colors">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="w-4 h-4 text-white/25" />
+                <span className="text-[11px] uppercase tracking-wider text-white/50 font-semibold">En riesgo</span>
+              </div>
+              <div className="text-4xl font-black text-white/25">{enRiesgo}</div>
+              <p className="text-[10px] text-white/30 font-medium mt-1">Todo en orden</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-white/20" />
+          </Link>
+        </div>
+
+        {/* Grid inferior: Actividad + Entregas + Áreas */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
+          {/* Actividad reciente */}
+          <div className="xl:col-span-5 bg-[#1c1c1c] border border-white/[0.08] rounded-2xl p-5 lg:p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-sm font-bold uppercase tracking-wider">Actividad reciente</h2>
+                <p className="text-xs text-white/40 mt-0.5">Lo que sucede ahora</p>
+              </div>
+              <Link href="/admin/alertas" className="text-xs font-medium text-white/50 hover:text-white flex items-center gap-1 transition-colors">
+                Ver todo <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            {actividades.length === 0 ? (
+              <Vacio
+                icono={Clock}
+                titulo="Sin actividad registrada"
+                detalle="Cuando los operadores reporten avances, aparecerán aquí"
+              />
+            ) : (
+              <div className="divide-y divide-white/[0.04]">
+                {actividades.map((a) => (
+                  <div key={a.id} className="py-3.5 flex items-start justify-between gap-3 first:pt-0 last:pb-0">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${dotTono[a.tono]}`} />
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-data text-[11px] font-medium text-[#62666F]">{p.codigo}</span>
-                          <span
-                            className={`inline-flex h-5 w-5 items-center justify-center rounded border font-data text-[10px] font-semibold ${prioStyle[p.prio]}`}
-                          >
-                            {p.prio}
-                          </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-bold">{a.titulo}</span>
+                          <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${estadoTono[a.tono]}`}>{a.estado}</span>
                         </div>
-                        <div className="mt-0.5 truncate font-medium text-[#F4F5F7]">{p.nombre}</div>
-                        <div className="text-xs text-[#62666F]">{p.cliente} · Entrega {p.entrega}</div>
+                        <div className="text-[11px] text-white/40 mt-1 truncate">{a.codigo} · {a.resp}</div>
                       </div>
-                      <span
-                        className={`shrink-0 rounded-md px-2 py-0.5 font-display text-[10px] font-semibold uppercase tracking-wider ${estadoStyle[p.estado]}`}
-                      >
-                        {p.estado === "ACT" ? "Activo" : p.estado === "OK" ? "Completado" : "Retraso"}
-                      </span>
                     </div>
-                    <div className="mt-2.5 flex items-center gap-2.5">
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
-                        <div
-                          className={`h-full rounded-full ${
-                            p.prog >= 70 ? "bg-[#2DD4A7]" : p.prog >= 30 ? "bg-[#F2B705]" : "bg-[#FF5A6E]"
-                          }`}
-                          style={{ width: `${p.prog}%` }}
-                        />
-                      </div>
-                      <span className="font-data text-xs font-medium text-[#9AA0AB]">{p.prog}%</span>
-                    </div>
+                    <span className="text-[11px] text-white/40 font-medium whitespace-nowrap flex items-center gap-1">
+                      <Clock className="w-3 h-3" />{a.tiempo}
+                    </span>
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* ACTIVIDAD POR ÁREA */}
-            <div className={card}>
-              <div className="flex items-center justify-between border-b border-[#2A2D33] px-4 py-3.5 sm:px-5">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-4 w-1 rounded-full bg-[#5B9BFF]" />
-                  <h3 className="font-display text-sm font-semibold tracking-wide text-[#F4F5F7]">
-                    Actividad por área
-                  </h3>
-                </div>
-                <div className="flex items-center gap-1 rounded-lg border border-[#2A2D33] bg-[#0E0F11] p-0.5">
-                  {["Hoy", "7D", "30D"].map((t, i) => (
-                    <button
-                      key={t}
-                      className={`rounded-md px-2.5 py-1 font-display text-[11px] font-semibold tracking-wide transition-colors ${
-                        i === 0 ? "bg-white/[0.08] text-[#F4F5F7]" : "text-[#62666F] hover:text-[#9AA0AB]"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-3.5 p-4 sm:p-5">
-                {areas.map((a, i) => {
-                  const total = a.ok + a.proc + a.pend;
-                  const okPct = (a.ok / total) * 100;
-                  const procPct = (a.proc / total) * 100;
-                  return (
-                    <div key={i} className="grid grid-cols-[92px_1fr_auto] items-center gap-3 sm:grid-cols-[120px_1fr_auto]">
-                      <div className="truncate text-xs font-medium text-[#9AA0AB]">{a.nombre}</div>
-                      <div className="flex h-2 overflow-hidden rounded-full bg-white/[0.06]">
-                        <div className="bg-[#2DD4A7]" style={{ width: `${okPct}%` }} />
-                        <div className="bg-[#F2B705]" style={{ width: `${procPct}%` }} />
-                      </div>
-                      <div className="font-data text-xs font-semibold tabular-nums text-[#F4F5F7]">{a.util}%</div>
-                    </div>
-                  );
-                })}
-                <div className="flex items-center gap-4 border-t border-[#2A2D33] pt-3 font-data text-[11px] text-[#62666F]">
-                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#2DD4A7]" /> Completado</span>
-                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#F2B705]" /> En proceso</span>
-                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-white/[0.15]" /> Pendiente</span>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
 
-          {/* COLUMNA DERECHA */}
-          <div className="space-y-4">
-            {/* PRÓXIMAS ENTREGAS */}
-            <div className={card}>
-              <div className="flex items-center justify-between border-b border-[#2A2D33] px-4 py-3.5 sm:px-5">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-4 w-1 rounded-full bg-[#F2B705]" />
-                  <h3 className="font-display text-sm font-semibold tracking-wide text-[#F4F5F7]">
-                    Próximas entregas
-                  </h3>
-                </div>
-                <span className="font-data text-xs text-[#62666F]">{entregas.length}</span>
-              </div>
-              <div className="divide-y divide-[#2A2D33]/70">
+          {/* Próximas entregas */}
+          <div className="xl:col-span-3 bg-[#1c1c1c] border border-white/[0.08] rounded-2xl p-5 lg:p-6">
+            <div className="mb-5">
+              <h2 className="text-sm font-bold uppercase tracking-wider">Próximas entregas</h2>
+              <p className="text-xs text-white/40 mt-0.5">Ordenadas por urgencia</p>
+            </div>
+            {entregas.length === 0 ? (
+              <Vacio
+                icono={CalendarDays}
+                titulo="Sin entregas programadas"
+                detalle="Crea un proyecto para empezar a darle seguimiento"
+              />
+            ) : (
+              <div className="space-y-3">
                 {entregas.map((e, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-white/[0.02] sm:px-5"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className={`h-8 w-1 rounded-full ${alertDot[e.alert]}`} />
-                      <div className="min-w-0">
-                        <div className="font-data text-xs font-semibold text-[#F4F5F7]">{e.proy}</div>
-                        <div className="truncate text-xs text-[#62666F]">{e.cliente}</div>
-                      </div>
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-[#252525] border border-white/[0.04] hover:border-white/[0.1] transition-colors">
+                    <div className={`w-1 h-9 rounded-full flex-shrink-0 ${
+                      e.tono === "red" ? "bg-red-500" : e.tono === "amber" ? "bg-amber-500" : e.tono === "blue" ? "bg-blue-500" : "bg-white/20"
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold text-white truncate">{e.proy}</div>
+                      <div className="text-[10px] text-white/40">{e.cliente}</div>
                     </div>
-                    <div
-                      className={`shrink-0 font-data text-sm font-semibold tabular-nums ${
-                        e.dias < 0 ? "text-[#FF5A6E]" : e.dias <= 3 ? "text-[#F2B705]" : e.dias <= 7 ? "text-[#5B9BFF]" : "text-[#62666F]"
-                      }`}
-                    >
+                    <span className={`text-xs font-bold whitespace-nowrap ${
+                      e.dias < 0 ? "text-red-400" : e.dias <= 3 ? "text-amber-400" : e.dias <= 7 ? "text-blue-400" : "text-white/50"
+                    }`}>
                       {e.dias < 0 ? `${Math.abs(e.dias)}d tarde` : `${e.dias}d`}
-                    </div>
+                    </span>
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* TOP OPERADORES */}
-            <div className={card}>
-              <div className="flex items-center justify-between border-b border-[#2A2D33] px-4 py-3.5 sm:px-5">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-4 w-1 rounded-full bg-[#2DD4A7]" />
-                  <h3 className="font-display text-sm font-semibold tracking-wide text-[#F4F5F7]">
-                    Top operadores
-                  </h3>
-                </div>
-                <span className="font-display text-[11px] font-medium tracking-wide text-[#62666F]">SEMANA</span>
-              </div>
-              <div className="divide-y divide-[#2A2D33]/70">
-                {operadores.map((op) => (
-                  <div key={op.rank} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/[0.02] sm:px-5">
-                    <div
-                      className={`font-display w-5 text-sm font-bold ${
-                        op.rank === 1 ? "text-[#F2B705]" : op.rank === 2 ? "text-[#9AA0AB]" : op.rank === 3 ? "text-[#C77B3E]" : "text-[#62666F]"
-                      }`}
-                    >
-                      {op.rank}
-                    </div>
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-xs font-semibold text-[#F4F5F7]">
-                      {op.nombre.split(" ")[0][0]}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium text-[#F4F5F7]">{op.nombre}</div>
-                      <div className="text-xs text-[#62666F]">{op.area}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-data text-sm font-semibold tabular-nums text-[#F4F5F7]">{op.pzs}</div>
-                      <div className="font-data text-[11px] font-medium text-[#2DD4A7]">{op.ef}%</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* ALERTAS */}
-            <div className={card}>
-              <div className="flex items-center justify-between border-b border-[#2A2D33] px-4 py-3.5 sm:px-5">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-4 w-1 rounded-full bg-[#FF5A6E]" />
-                  <h3 className="font-display text-sm font-semibold tracking-wide text-[#F4F5F7]">Alertas</h3>
-                </div>
-                <span className="font-data text-xs text-[#62666F]">{alertas.length}</span>
-              </div>
-              <div className="divide-y divide-[#2A2D33]/70">
-                {alertas.map((a, i) => (
-                  <div key={i} className="relative px-4 py-3 pl-5 transition-colors hover:bg-white/[0.02] sm:px-5 sm:pl-6">
-                    <span
-                      className="absolute left-0 top-0 h-full w-1"
-                      style={a.tipo === "CRIT" ? hazardStripe : undefined}
-                    />
-                    {a.tipo !== "CRIT" && (
-                      <span className={`absolute left-0 top-0 h-full w-1 ${alertDot[a.tipo]}`} />
-                    )}
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`rounded px-1.5 py-0.5 font-display text-[10px] font-bold tracking-wide ${
-                          a.tipo === "CRIT" ? "bg-[#FF5A6E]/15 text-[#FF5A6E]" :
-                          a.tipo === "HIGH" ? "bg-[#F2B705]/15 text-[#F2B705]" :
-                          a.tipo === "MED" ? "bg-[#5B9BFF]/15 text-[#5B9BFF]" :
-                          "bg-white/[0.08] text-[#62666F]"
-                        }`}
-                      >
-                        {a.tipo}
-                      </span>
-                      <span className="font-data text-[11px] text-[#62666F]">hace {a.t}</span>
-                    </div>
-                    <div className="mt-1 text-sm leading-snug text-[#D8DAE0]">{a.msg}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
-        </section>
-      </main>
+
+          {/* Estado operativo por área */}
+          <div className="xl:col-span-4 bg-[#1c1c1c] border border-white/[0.08] rounded-2xl p-5 lg:p-6 flex flex-col">
+            <div className="mb-5">
+              <h2 className="text-sm font-bold uppercase tracking-wider">Estado operativo</h2>
+              <p className="text-xs text-white/40 mt-0.5">Situación de las áreas</p>
+            </div>
+            {areas.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center">
+                <Vacio
+                  icono={LayoutDashboard}
+                  titulo="Sin áreas configuradas"
+                  detalle="Da de alta las áreas de producción para verlas aquí"
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 flex-1">
+                {areas.map((item, i) => (
+                  <div key={i} className="bg-[#252525] border border-white/[0.06] rounded-xl p-3.5 flex flex-col justify-between hover:border-white/[0.12] transition-colors">
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="text-xs font-bold text-white/90 leading-tight">{item.area}</span>
+                      <span className="text-lg font-black">{item.tareas}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className={`w-1.5 h-1.5 rounded-full ${item.dot}`} />
+                      <span className="text-[10px] text-white/40 font-medium">{item.estado}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <Link href="/admin/calendario" className="w-full mt-4 py-2.5 text-xs font-semibold text-white/60 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] rounded-xl transition-colors flex items-center justify-center gap-1.5">
+              Ver todas las áreas <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

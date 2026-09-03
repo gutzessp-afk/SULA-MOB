@@ -1,118 +1,53 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { ListChecks, History, User, LogOut, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { clearSession, getSession } from "@/lib/auth";
-import { SulaMobLogo } from "./logo";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+import { usePathname } from "next/navigation";
+import { Home, ClipboardList, History, User } from "lucide-react";
 
-const navItems = [
-  { href: "/operator/dashboard", label: "Mis actividades", icon: ListChecks },
+const items = [
+  { href: "/operator", label: "Inicio", icon: Home },
+  { href: "/operator/actividades", label: "Actividades", icon: ClipboardList },
   { href: "/operator/historial", label: "Historial", icon: History },
   { href: "/operator/perfil", label: "Perfil", icon: User },
 ];
 
-interface OperatorSidebarProps {
-  open: boolean;
-  onClose: () => void;
-}
-
-export function OperatorSidebar({ open, onClose }: OperatorSidebarProps) {
+export function OperatorSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const user = getSession();
 
-  function handleLogout() {
-    clearSession();
-    router.push("/login");
-  }
-
-  const sidebarContent = (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-6 py-5">
-        <SulaMobLogo size="md" />
-        <button
-          onClick={onClose}
-          className="md:hidden text-white/40 hover:text-white transition-colors"
-          aria-label="Cerrar menú"
-        >
-          <X size={20} />
-        </button>
+  return (
+    <aside className="hidden lg:flex lg:w-60 lg:flex-col lg:border-r lg:border-white/[0.08] lg:bg-[#1c1c1c] lg:px-4 lg:py-6">
+      <div className="mb-8 px-2">
+        <p className="text-lg font-extrabold tracking-tight">
+          SULA<span className="text-[#E30613]">MOB</span>
+        </p>
+        <p className="mt-1 text-[10px] font-medium tracking-widest text-white/30">
+          CALIDAD · CONFIANZA · INNOVACIÓN
+        </p>
       </div>
 
-      <Separator className="bg-white/[0.06]" />
+      <nav className="flex flex-col gap-1">
+        {items.map(({ href, label, icon: Icon }) => {
+          const isActive =
+            href === "/operator"
+              ? pathname === "/operator"
+              : pathname.startsWith(href);
 
-      {user?.area && (
-        <div className="px-6 py-3">
-          <Badge className="bg-[#E30613]/15 text-[#E30613] border border-[#E30613]/30 text-[11px] font-medium">
-            {user.area}
-          </Badge>
-        </div>
-      )}
-
-      <nav className="flex-1 px-3 py-4 space-y-0.5" aria-label="Navegación">
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href;
           return (
             <Link
               key={href}
               href={href}
-              onClick={onClose}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150",
-                active
-                  ? "bg-[#E30613]/15 text-white border border-[#E30613]/25"
-                  : "text-white/50 hover:text-white hover:bg-white/[0.05]"
-              )}
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                isActive
+                  ? "bg-[#E30613]/10 text-[#E30613]"
+                  : "text-white/50 hover:bg-white/[0.05] hover:text-white/80"
+              }`}
             >
-              <Icon size={16} className={active ? "text-[#E30613]" : ""} />
+              <Icon size={18} strokeWidth={isActive ? 2.4 : 1.8} />
               {label}
             </Link>
           );
         })}
       </nav>
-
-      <div className="px-3 pb-5">
-        <Separator className="bg-white/[0.06] mb-4" />
-        <div className="px-3 mb-3">
-          <p className="text-xs font-semibold text-white truncate">{user?.name ?? "Operador"}</p>
-          <p className="text-[11px] text-white/40 mt-0.5">{user?.area ?? "Área"}</p>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleLogout}
-          className="w-full justify-start gap-3 text-white/40 hover:text-white hover:bg-white/[0.05] px-3"
-        >
-          <LogOut size={15} />
-          Cerrar sesión
-        </Button>
-      </div>
-    </div>
-  );
-
-  return (
-    <>
-      <aside className="hidden md:flex flex-col w-[220px] shrink-0 border-r border-white/[0.06] bg-[#0a0a0a]">
-        {sidebarContent}
-      </aside>
-
-      {open && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={onClose}
-            aria-hidden="true"
-          />
-          <aside className="relative flex flex-col w-[220px] bg-[#0d0d0d] border-r border-white/[0.06] z-10">
-            {sidebarContent}
-          </aside>
-        </div>
-      )}
-    </>
+    </aside>
   );
 }
